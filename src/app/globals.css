@@ -1,4 +1,4 @@
-﻿/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    Plain CSS base + small utility shim (no Tailwind).
    â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
@@ -684,4 +684,93 @@ textarea {
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;
+}
+
+.file-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.file-input-name {
+  font-size: 0.875rem;
+  color: #475569;
+}
+
+@media (max-width: 640px) {
+  .file-input-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .file-input-row .file-input-name {
+    font-size: 0.8125rem;
+  }
+}
+
+textarea {
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+input[type="date"] {
+  font-family: inherit;
+  font-size: 0.95rem;
+  -webkit-text-fill-color: #111827;
+  height: 38px;
+  padding: .5rem .75rem;
+  line-height: 1.25;
+}
+
+input[type="date"]::-webkit-datetime-edit,
+input[type="date"]::-webkit-datetime-edit-text,
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-year-field {
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: #111827;
+}
+
+.input-with-suffix {
+  display: inline-flex;
+  align-items: stretch;
+  max-width: 16rem;
+  border: 1px solid #cbd5e1;
+  border-radius: .5rem;
+  overflow: hidden;
+  background: #fff;
+}
+
+.input-with-suffix input {
+  border: 0;
+  border-radius: 0;
+  padding: .5rem .75rem;
+  width: 100%;
+}
+
+.input-with-suffix .suffix {
+  display: inline-flex;
+  align-items: center;
+  padding: .5rem .75rem;
+  background: #f9fafb;
+  color: #475569;
+  font-size: 0.875rem;
+  border-left: 1px solid #cbd5e1;
+}
+.input-with-suffix:focus-within {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .15);
+}
+
+.input-with-suffix input:focus {
+  box-shadow: none;
+}
+input[type="date"]::-webkit-calendar-picker-indicator {
+  margin: 0;
+}
+.field-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }

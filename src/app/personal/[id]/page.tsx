@@ -1,4 +1,4 @@
-﻿// src/app/personal/[id]/page.tsx
+// src/app/personal/[id]/page.tsx
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ParentType } from "@prisma/client";
@@ -54,7 +54,7 @@ export default async function PersonalContainerDetailPage({ params }: { params: 
           </p>
         </div>
         <div style={{ display: "flex", gap: ".5rem" }}>
-          <Link href={/personal//edit} className="btn btn-outline">Edit</Link>
+          <Link href={`/personal/${container.id}/edit`} className="btn btn-outline">Edit</Link>
           <Link href="/personal" className="btn btn-outline">Back</Link>
         </div>
       </div>

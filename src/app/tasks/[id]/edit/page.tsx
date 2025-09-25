@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireAccountId } from "@/lib/current-account";
@@ -70,15 +70,20 @@ export default async function EditTaskPage({ params }: { params: { id: string } 
                         <div className="field">
                             <label htmlFor="assetId" className="label">Asset</label>
                             <select id="assetId" name="assetId" defaultValue={task.assetId ?? ""}>
-                                <option value="">— None —</option>
-                                {assets.map(a => (
-                                    <option key={a.id} value={a.id}>{a.name}</option>
+                                <option value="">- None -</option>
+                                {assets.map((a) => (
+                                    <option key={a.id} value={a.id}>
+                                        {a.name}
+                                    </option>
                                 ))}
                             </select>
                         </div>
 
                         <div className="field">
                             <label htmlFor="dueDate" className="label">Due date</label>
+                            <p className="text-xs text-muted-foreground" style={{ marginBottom: 6 }}>
+                                Provide a due date when enabling recurrence.
+                            </p>
                             <input
                                 id="dueDate"
                                 name="dueDate"
@@ -89,7 +94,7 @@ export default async function EditTaskPage({ params }: { params: { id: string } 
 
                         <div className="field">
                             <label className="label" htmlFor="completed">Status</label>
-                            <div style={{ display: "flex", alignItems: "center", gap: ".5rem" }}>
+                            <div className="field-inline">
                                 <input id="completed" name="completed" type="checkbox" defaultChecked={task.completed} />
                                 <label htmlFor="completed" className="text-muted-foreground" style={{ cursor: "pointer" }}>
                                     Mark as completed
@@ -100,13 +105,13 @@ export default async function EditTaskPage({ params }: { params: { id: string } 
 
                     <div className="field">
                         <label className="label" htmlFor="isRecurring">Recurring</label>
-                        <div style={{ display: "flex", alignItems: "center", gap: ".5rem" }}>
+                        <div className="field-inline">
                             <input id="isRecurring" name="isRecurring" type="checkbox" defaultChecked={task.isRecurring} />
                             <label htmlFor="isRecurring" className="text-muted-foreground" style={{ cursor: "pointer" }}>
                                 Generate follow-up tasks automatically
                             </label>
                         </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: ".5rem", marginTop: ".5rem" }}>
+                        <div className="input-with-suffix" style={{ marginTop: ".5rem" }}>
                             <input
                                 id="recurrenceMonths"
                                 name="recurrenceMonths"
@@ -114,15 +119,15 @@ export default async function EditTaskPage({ params }: { params: { id: string } 
                                 min={MIN_RECURRENCE_MONTHS}
                                 step={1}
                                 defaultValue={task.recurrenceMonths ?? ""}
-                                placeholder="Months"
+                                placeholder="e.g. 6"
                             />
-                            <span className="text-muted-foreground">month(s)</span>
-                            {task.nextDueDate ? (
-                                <span className="text-xs text-muted-foreground">
-                                    Next occurrence preview: {task.nextDueDate.toISOString().slice(0, 10)}
-                                </span>
-                            ) : null}
+                            <span className="suffix">month(s)</span>
                         </div>
+                        {task.nextDueDate ? (
+                            <p className="text-xs text-muted-foreground" style={{ marginTop: 4 }}>
+                                Next occurrence preview: {task.nextDueDate.toISOString().slice(0, 10)}
+                            </p>
+                        ) : null}
                     </div>
 
                     <div className="field">
@@ -139,6 +144,3 @@ export default async function EditTaskPage({ params }: { params: { id: string } 
         </main>
     );
 }
-
-
-

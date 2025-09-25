@@ -1,4 +1,4 @@
-﻿// src/app/tasks/new/page.tsx
+// src/app/tasks/new/page.tsx
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireAccountId } from "@/lib/current-account";
@@ -49,32 +49,29 @@ export default async function NewTaskPage() {
 
                         <div className="field">
                             <label htmlFor="dueDate" className="label">Due date</label>
+                            <p className="text-xs text-muted-foreground" style={{ marginBottom: 6 }}>
+                                Provide a due date when enabling recurrence.
+                            </p>
                             <input id="dueDate" name="dueDate" type="date" />
                         </div>
-
                         <div className="field">
                             <label className="label" htmlFor="isRecurring">Recurring</label>
-                            <div style={{ display: "flex", alignItems: "center", gap: ".5rem" }}>
+                            <div className="field-inline">
                                 <input id="isRecurring" name="isRecurring" type="checkbox" />
                                 <label htmlFor="isRecurring" className="text-muted-foreground" style={{ cursor: "pointer" }}>
                                     Generate follow-up tasks automatically
                                 </label>
                             </div>
-                            <div className="field" style={{ marginTop: ".5rem" }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: ".5rem" }}>
-                                    <input
-                                        id="recurrenceMonths"
-                                        name="recurrenceMonths"
-                                        type="number"
-                                        min={MIN_RECURRENCE_MONTHS}
-                                        step={1}
-                                        placeholder="e.g. 6"
-                                    />
-                                    <span className="text-muted-foreground">month(s)</span>
-                                </div>
-                                <p className="text-xs text-muted-foreground" style={{ marginTop: 4 }}>
-                                    Provide a due date when enabling recurrence.
-                                </p>
+                            <div className="input-with-suffix" style={{ marginTop: ".5rem" }}>
+                                <input
+                                    id="recurrenceMonths"
+                                    name="recurrenceMonths"
+                                    type="number"
+                                    min={MIN_RECURRENCE_MONTHS}
+                                    step={1}
+                                    placeholder="e.g. 6"
+                                />
+                                <span className="suffix">month(s)</span>
                             </div>
                         </div>
                     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import useSWR from "swr";
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB
@@ -83,6 +83,8 @@ export default function AttachmentsPanel({
   const [title, setTitle] = useState("");
   const [descriptionText, setDescriptionText] = useState("");
   const [documentDate, setDocumentDate] = useState("");
+  const [fileName, setFileName] = useState("");
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -91,7 +93,7 @@ export default function AttachmentsPanel({
     setError(null);
 
     const formEl = event.currentTarget;
-    const fileInput = formEl.elements.namedItem("file") as HTMLInputElement | null;
+    const fileInput = fileInputRef.current ?? (formEl.elements.namedItem("file") as HTMLInputElement | null);
     const file = fileInput?.files?.[0];
 
     if (!file) {
@@ -125,6 +127,10 @@ export default function AttachmentsPanel({
       setTitle("");
       setDescriptionText("");
       setDocumentDate("");
+      setFileName("");
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
       mutate();
     } catch (err) {
       console.error(err);
@@ -163,7 +169,6 @@ export default function AttachmentsPanel({
             <label className="field">
               <span className="label">Type</span>
               <select
-                className="border rounded p-2"
                 value={category}
                 onChange={(e) => setCategory(e.target.value as typeof category)}
               >
@@ -181,7 +186,6 @@ export default function AttachmentsPanel({
                 name="documentDate"
                 value={documentDate}
                 onChange={(e) => setDocumentDate(e.target.value)}
-                className="border rounded p-2"
               />
             </label>
             <label className="field">
@@ -192,7 +196,6 @@ export default function AttachmentsPanel({
                 placeholder="Optional title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="border rounded p-2"
               />
             </label>
           </div>
@@ -205,13 +208,28 @@ export default function AttachmentsPanel({
               placeholder="Notes (optional)"
               value={descriptionText}
               onChange={(e) => setDescriptionText(e.target.value)}
-              className="border rounded p-2"
             />
           </label>
 
           <label className="field">
             <span className="label">File</span>
-            <input type="file" name="file" className="border rounded p-2" required />
+            <div className="file-input-row">
+              <input
+                ref={fileInputRef}
+                type="file"
+                name="file"
+                className="sr-only"
+                required
+                onChange={(e) => {
+                  const selected = e.currentTarget.files?.[0];
+                  setFileName(selected ? selected.name : "");
+                }}
+              />
+              <button type="button" className="btn btn-outline" onClick={() => fileInputRef.current?.click()}>
+                Choose file
+              </button>
+              <span className="file-input-name">{fileName || "No file chosen"}</span>
+            </div>
             <small className="text-xs text-muted-foreground">Maximum size 10 MB.</small>
           </label>
 
