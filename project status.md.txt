@@ -1,0 +1,77 @@
+﻿# Household Asset Manager – Project Status
+
+_Last updated: now (local time)._ 
+
+## Stack & Environment
+- **Framework:** Next.js 15.4.6 (App Router)
+- **DB & ORM:** Prisma 6.14.0 with SQLite
+- **Runtime:** Node.js (v22 in local dev)
+- **Env (.env):**
+  ```ini
+  DATABASE_URL="file:C:/DEV/asset-app-fresh/prisma/dev.db"
+  NEXTAUTH_SECRET="dev-secret"
+  NEXTAUTH_URL="http://localhost:3000"
+  ```
+
+### Prisma Schema (snapshot)
+- Enums include: `AssetStatus`, `OwnershipStatus`, `ParentType`, etc.
+- Core models: `Account`, `Asset`, `Property`, `Vehicle`, `PersonContainer`, `OtherContainer`, `MaintenanceTask`, `Warranty`, `Document`, `ActivityLog`.
+- Legacy `Portfolio` table still exists only for historical data (`legacyPortfolioId` fields) but is no longer part of the product surface.
+
+## Seed / Demo Login
+- Demo user: `demo@demo.com / pass123`
+- Seed with `npm run db:seed` (runs `prisma/seed.js`).
+
+## Implemented Pages (stable)
+- `/` – Landing page with link to sign in
+- `/signin` – Credentials login (redirects to `/dashboard` when authed)
+- `/dashboard` – Overview tiles + quick actions
+- `/properties` / `/vehicles` / `/personal` / `/other` – Container listings powered by `parentType`
+- `/assets` / `/assets/[id]` / `/assets/[id]/edit` – Asset catalogue, detail and edit
+- `/tasks` – Maintenance tasks with filters + server actions
+- `/warranties` / `/warranties/[id]` – Warranty list & detail
+
+## Notes
+- All DB reads/writes happen server-side through Prisma.
+- Assets now require `accountId` + `parentType`/`parentId`; former `portfolioId` is kept only as `legacyPortfolioId` for migrations.
+- Navigation, middleware guards, and seed/demo data target the new container-first flow.
+
+## Scripts
+```jsonc
+"scripts": {
+  "dev": "next dev",
+  "build": "next build",
+  "start": "next start",
+  "lint": "next lint",
+  "db:seed": "node prisma/seed.js"
+}
+```
+
+## Known Good Files (current session)
+- `src/lib/db.ts` – Prisma singleton
+- `src/app/dashboard/page.tsx` – Updated stats (properties, vehicles, assets, etc.)
+- `src/app/assets/page.tsx` – Parent-aware asset index
+- `src/app/assets/[id]/page.tsx` & `/edit/page.tsx` – Asset detail + edit
+- `src/app/warranties/page.tsx` – Warranty list (account-based filters)
+- `src/app/properties/page.tsx`, `/vehicles/page.tsx`, `/personal/page.tsx`, `/other/page.tsx`
+
+## Open Items / Next Steps
+- Add creation/edit flows for properties, vehicles, personal & other containers.
+- Extend maintenance task CRUD (edit, delete, recurrence UX).
+- Document uploads & warranties: richer UI, reminders.
+- Activity log & notifications: append events, expose preferences.
+- Auth polish: better session UX, password hashing if moving beyond demo.
+- Dashboard enhancements: highlight upcoming maintenance & expiring warranties.
+- Deployment fit & finish: production DB path, environment secrets, SQLite backup strategy.
+
+## Troubleshooting
+- “Failed to construct URL”: keep mutations in server actions (no client-side `new URL`).
+- Hydration warnings: avoid non-deterministic values in client components rendered on server.
+- Prisma errors: ensure `prisma/schema.prisma` is up to date, run `npx prisma db push` and reseed if needed.
+
+## How to Run
+```bash
+npm install
+npm run dev
+# visit http://localhost:3000 and sign in with demo@demo.com / pass123
+```

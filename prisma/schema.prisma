@@ -1,0 +1,523 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+
+  url = env("DATABASE_URL") // file:./prisma/dev.db
+}
+
+model Account {
+  id String @id @default(cuid())
+
+  code String @unique
+
+  name String?
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  portfolios Portfolio[]
+
+  countryCode String? // e.g., "ZA"
+
+  currencyCode String? // e.g., "ZAR"
+
+  dashboardConfig DashboardConfig?
+
+  AccountPreference AccountPreference[]
+
+  maintenanceTemplates MaintenanceTemplate[]
+
+  properties Property[]
+
+  vehicles Vehicle[]
+
+  personContainers PersonContainer[]
+
+  otherContainers OtherContainer[]
+
+  documents Document[]
+
+  collections Collection[]
+
+  assets Asset[]
+}
+
+model Portfolio {
+  id String @id @default(cuid())
+
+  name String
+
+  type PortfolioType
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  accountId String
+
+  account Account @relation(fields: [accountId], references: [id])
+
+  currencyCode String?
+}
+
+model Property {
+  legacyPortfolioId String?
+
+  id String @id @default(cuid())
+
+  accountId String
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  name String
+
+  label String?
+
+  addressLine1 String?
+
+  addressLine2 String?
+
+  city String?
+
+  region String?
+
+  postalCode String?
+
+  countryCode String?
+
+  purchasePriceCents Int?
+
+  purchaseDate DateTime?
+
+  ownershipStatus OwnershipStatus @default(Owner)
+
+  notes String?
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+model Vehicle {
+  legacyPortfolioId String?
+
+  id String @id @default(cuid())
+
+  accountId String
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  nickname String?
+
+  vin String? @unique
+
+  make String?
+
+  model String?
+
+  year Int?
+
+  licenseRenewalOn DateTime?
+
+  insuranceExpiresOn DateTime?
+
+  servicePlanExpiresOn DateTime?
+
+  roadworthyExpiresOn DateTime?
+
+  notes String?
+
+  primaryAssetId String? @unique
+
+  primaryAsset Asset? @relation("VehiclePrimaryAsset", fields: [primaryAssetId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+model PersonContainer {
+  legacyPortfolioId String?
+
+  id String @id @default(cuid())
+
+  accountId String
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  label String
+
+  notes String?
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+model OtherContainer {
+  legacyPortfolioId String?
+
+  id String @id @default(cuid())
+
+  accountId String
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  label String
+
+  notes String?
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+model Asset {
+  id String @id @default(cuid())
+
+  name String
+
+  description String?
+
+  category String?
+
+  assetType AssetType?
+
+  serial String? @unique
+
+  location String?
+
+  purchaseDate DateTime?
+
+  purchasePriceCents Int?
+
+  accountId String
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  parentType ParentType
+
+  parentId String
+
+  status AssetStatus @default(Active)
+
+  statusChangedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  legacyPortfolioId String?
+
+  tasks MaintenanceTask[] @relation("AssetTasks")
+
+  warranties Warranty[]
+
+  templates MaintenanceTemplate[]
+
+  documents Document[]
+
+  collectionItems CollectionItem[]
+  primaryVehicle Vehicle? @relation("VehiclePrimaryAsset")
+
+  @@index([accountId])
+  @@index([parentType, parentId])
+}
+
+enum PortfolioType {
+  Property
+
+  Vehicle
+
+  Personal
+
+  Other
+}
+
+model MaintenanceTask {
+  id                String   @id @default(cuid())
+  title             String
+  notes             String?
+  dueDate           DateTime?
+  completed         Boolean  @default(false)
+  asset             Asset?   @relation("AssetTasks", fields: [assetId], references: [id])
+  assetId           String?
+  parentType        ParentType?
+  parentId          String?
+  template          MaintenanceTemplate? @relation(fields: [templateId], references: [id])
+  templateId        String?
+  isRecurring       Boolean  @default(false)
+  recurrenceMonths  Int?
+  nextDueDate       DateTime?
+  cancelledAt       DateTime?
+  cancelReason      String?
+
+  warrantyId        String?
+  warranty          Warranty? @relation(fields: [warrantyId], references: [id], onDelete: SetNull)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  documents         Document[]
+
+  @@index([parentType, parentId])
+  @@index([warrantyId])
+}
+
+model MaintenanceTemplate {
+  id String @id @default(cuid())
+
+  accountId String
+
+  account Account @relation(fields: [accountId], references: [id])
+
+  title String
+
+  notes String?
+
+  cadenceMonths Int
+
+  leadTimeDays Int @default(0)
+
+  startDate DateTime?
+
+  assetId String?
+
+  asset Asset? @relation(fields: [assetId], references: [id])
+
+  parentType ParentType?
+
+  parentId String?
+
+  active Boolean @default(true)
+
+  lastGeneratedAt DateTime?
+
+  nextScheduledAt DateTime?
+
+  tasks MaintenanceTask[]
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  @@index([accountId, active, nextScheduledAt])
+}
+
+enum DocumentCategory {
+  Invoice
+  Warranty
+  Policy
+  Photo
+  Receipt
+  Quote
+  Manual
+  Service
+  Other
+}
+
+model Document {
+  id String @id @default(cuid())
+
+  accountId String
+  title String
+  description String?
+  category DocumentCategory @default(Other)
+  documentDate DateTime?
+  filePath String
+  fileSize Int?
+  contentType String?
+  originalName String?
+  parentType ParentType?
+  parentId String?
+  assetId String?
+  taskId String?
+  warrantyId String?
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  asset Asset? @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  task MaintenanceTask? @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  warranty Warranty? @relation(fields: [warrantyId], references: [id], onDelete: Cascade)
+
+  @@index([parentType, parentId])
+  @@index([assetId])
+  @@index([taskId])
+  @@index([warrantyId])
+  @@index([deletedAt])
+}
+
+model Collection {
+  id String @id @default(cuid())
+
+  accountId String
+
+  name String
+
+  notes String?
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  items CollectionItem[]
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}
+
+model CollectionItem {
+  id String @id @default(cuid())
+
+  collectionId String
+
+  parentType ParentType
+
+  parentId String
+
+  assetId String?
+
+  createdAt DateTime @default(now())
+
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  asset Asset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
+
+  @@unique([collectionId, parentType, parentId, assetId])
+  @@index([parentType, parentId])
+}
+
+model ActivityLog {
+  id String @id @default(cuid())
+
+  action String
+
+  entityType String
+
+  entityId String
+
+  createdAt DateTime @default(now())
+}
+
+// NEW model
+
+model Warranty {
+  id String @id @default(cuid())
+
+  name String
+
+  expiresAt DateTime?
+
+  provider String?
+
+  policyNo String?
+
+  asset Asset @relation(fields: [assetId], references: [id])
+  assetId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  documents Document[]
+  tasks MaintenanceTask[]
+}
+
+
+model DashboardConfig {
+  id String @id @default(cuid())
+
+  accountId String @unique
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  tasksDueInDays Int @default(7)
+
+  warrantiesExpiringInDays Int @default(30)
+
+  overdueGraceDays Int @default(0)
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+model AccountPreference {
+  id String @id @default(cuid())
+
+  accountId String
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  namespace String // e.g. "dashboard", "notifications", "ui"
+
+  key String // e.g. "tasksDueInDays"
+
+  value Json // arbitrary JSON, e.g. 7 or { days: 7 }
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([accountId, namespace, key])
+}
+
+enum ParentType {
+  Property
+
+  Vehicle
+
+  PersonContainer
+
+  OtherContainer
+}
+
+enum OwnershipStatus {
+  Owner
+
+  Rental
+
+  Sold
+}
+
+enum AssetStatus {
+  Active
+
+  Sold
+
+  Scrapped
+
+  Transferred
+
+  Archived
+}
+
+enum AssetType {
+  Car
+
+  Tractor
+
+  Motorbike
+
+  Trailer
+
+  Other
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

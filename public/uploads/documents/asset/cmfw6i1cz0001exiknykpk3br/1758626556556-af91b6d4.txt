@@ -1,0 +1,50 @@
+
+                    KIRSTEN MORSE
+                    Physiotherapist             Pr 7222335
+                    kmorsephysio@gmail.com
+ Statement   4 June  2025                       Tel 011 465 24 19  
+                    ____________________WhatsApp 082 803 1130
+ Account  1423            0832146856
+          OOSTHUIZEN JOSEF JOHANNES MR 
+          MR JJ OOSTHUIZEN                      CONCOURSE MEDICAL
+                                                CENTRE
+                                                1 AFTONWOLD ROAD
+                                                LONEHILL
+
+  ___________
+  KIRSTEN MORSE
+  STANDARD BANK, RIVONIA,CHEQUE BR;001255 ac;220043922
+  ___________
+    
+  DISCOVERY HEALTH MEDICAL ,clai #: 915605731
+  Patient    :  JOSEF JOHANNES OOSTHUIZEN
+  DoB        : 08 09 1969  gender: MALE
+                            main ID  690908 5513 089
+  ___________
+  oosthuizen.johan@gmail.com
+  Diagnosis  : M75.1
+  ____________________________________________________
+
+ ref. ccyy mm dd, Tariff code                 Icd10
+                  
+15614 2025.05.07, 72501 dREHAB/UNDIVIDED ATTE M75.1    287,60
+15615             72509 d REHAB + 15 MINS     M75.1    173,30
+15616             72303 d MYOFACIALRE./SOFTTM M75.1    231,20
+15617             72401  SPINAL MOBS 0008     M75.1    117,20
+15618             72310 NEURAL TISSUE MOB0008 M75.1    118,70
+ 2436                  PAYMENT PAID THANK Y:   : 928.00
+                       928.00 - 928.00         =  0.00
+15911 2025.06.04, 72501 dREHAB/UNDIVIDED ATTE M75.1    287,60
+15912             72509 d REHAB + 15 MINS     M75.1    173,30
+15913             72303 d MYOFACIALRE./SOFTTM M75.1    231,20
+15914             72401  SPINAL MOBS 0008     M75.1    117,20
+15915             72310 NEURAL TISSUE MOB0008 M75.1    118,70
+ 2486                  PAYMENT PAID THANK Y:   : 928.00
+
+
+ db = invoices= 1856.00
+ re = payments= 1856.00 PAID
+
+  1423       OOSTHUIZEN           JOSEF JOHANNES Amount 0.00
+  Cash practice:Please settle your account.Then claim from your scheme.
+  Appointments not kept or cancelled 24 hours in advance are charged.
