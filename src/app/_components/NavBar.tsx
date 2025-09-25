@@ -1,24 +1,26 @@
-﻿// src/app/_components/NavBar.tsx
+// src/app/_components/NavBar.tsx
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { requireAccountId } from "@/lib/current-account";
+import { optionalAccountId } from "@/lib/current-account";
 import GearMenu from "./GearMenu";
 
 export default async function NavBar() {
-    const accountId = await requireAccountId().catch(() => null);
+    const accountId = await optionalAccountId();
 
-    const account = accountId
-        ? await prisma.account.findUnique({
-            where: { id: accountId },
-            select: {
-                id: true,
-                code: true,
-                name: true,
-                countryCode: true,
-                currencyCode: true,
-            },
-        })
-        : null;
+    if (!accountId) {
+        return null;
+    }
+
+    const account = await prisma.account.findUnique({
+        where: { id: accountId },
+        select: {
+            id: true,
+            code: true,
+            name: true,
+            countryCode: true,
+            currencyCode: true,
+        },
+    });
 
     return (
         <header className="navbar">
@@ -57,5 +59,3 @@ export default async function NavBar() {
         </header>
     );
 }
-
-
