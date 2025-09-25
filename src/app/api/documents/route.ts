@@ -1,4 +1,4 @@
-﻿// src/app/api/documents/route.ts
+// src/app/api/documents/route.ts
 import { NextResponse } from "next/server";
 import { DocumentCategory, ParentType } from "@prisma/client";
 
@@ -33,15 +33,23 @@ function serializeDocument(doc: any) {
 function buildQuery(accountId: string, targetType: string, targetId: string) {
   const where: any = { accountId, deletedAt: null };
   switch (targetType) {
-    case "asset":
+    case "asset": {
       where.assetId = targetId;
       break;
-    case "task":
+    }
+    case "property": {
+      where.parentType = ParentType.Property;
+      where.parentId = targetId;
+      break;
+    }
+    case "task": {
       where.taskId = targetId;
       break;
-    case "warranty":
+    }
+    case "warranty": {
       where.warrantyId = targetId;
       break;
+    }
     default:
       throw new Error("Unsupported target type");
   }
@@ -81,6 +89,11 @@ async function assertOwnership(accountId: string, targetType: string, targetId: 
       const asset = await prisma.asset.findFirst({ where: { id: targetId, accountId }, select: { id: true } });
       if (!asset) throw new Error("Asset not found");
       return { assetId: targetId };
+    }
+    case "property": {
+      const property = await prisma.property.findFirst({ where: { id: targetId, accountId }, select: { id: true } });
+      if (!property) throw new Error("Property not found");
+      return { parentType: ParentType.Property, parentId: targetId };
     }
     case "task": {
       const task = await prisma.maintenanceTask.findUnique({

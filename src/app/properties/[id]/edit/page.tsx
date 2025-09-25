@@ -7,6 +7,7 @@ import { requireAccountId } from "@/lib/current-account";
 import { COUNTRY_OPTIONS } from "@/lib/countries";
 import { OwnershipStatus } from "@prisma/client";
 import HelpPopover from "@/components/HelpPopover";
+import AttachmentsPanel from "@/app/_components/AttachmentsPanel";
 import { dateOrDash } from "@/lib/format";
 
 export const runtime = "nodejs";
@@ -105,7 +106,7 @@ export default async function EditPropertyPage({ params }: { params: { id: strin
                 <div>
                     <h1>Edit Property</h1>
                     <p className="text-muted-foreground" style={{ marginTop: 4 }}>
-                        Created {dateOrDash(property.createdAt)} · Updated {dateOrDash(property.updatedAt)}
+                        Created {dateOrDash(property.createdAt)} | Updated {dateOrDash(property.updatedAt)}
                     </p>
                 </div>
                 <Link href={`/properties/${property.id}`} className="btn btn-outline">Back</Link>
@@ -210,6 +211,16 @@ export default async function EditPropertyPage({ params }: { params: { id: strin
                     </div>
                 </div>
             </form>
+
+            <div style={{ marginTop: "2rem" }}>
+                <AttachmentsPanel
+                    targetType="property"
+                    targetId={property.id}
+                    heading="Property documents"
+                    description="Upload building plans, transfer records, and other supporting files."
+                    emptyState="No property documents uploaded yet."
+                />
+            </div>
         </main>
     );
 }

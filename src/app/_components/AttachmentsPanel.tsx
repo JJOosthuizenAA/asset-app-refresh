@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import useSWR from "swr";
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB
@@ -23,7 +23,7 @@ const fetcher = (url: string) =>
     return res.json();
   });
 
-type TargetType = "asset" | "task" | "warranty";
+type TargetType = "asset" | "task" | "warranty" | "property";
 
 type AttachmentsPanelProps = {
   targetType: TargetType;
@@ -74,7 +74,12 @@ export default function AttachmentsPanel({
   const { data, mutate, isLoading } = useSWR<{ documents: DocumentDto[] }>(query, fetcher);
 
   const documents = data?.documents ?? [];
-  const [category, setCategory] = useState<(typeof CATEGORY_OPTIONS)[number]["value"]>("Invoice");
+  const defaultCategory = targetType === "property" ? "Other" : "Invoice";
+  const [category, setCategory] = useState<(typeof CATEGORY_OPTIONS)[number]["value"]>(defaultCategory);
+
+  useEffect(() => {
+    setCategory(defaultCategory);
+  }, [defaultCategory]);
   const [title, setTitle] = useState("");
   const [descriptionText, setDescriptionText] = useState("");
   const [documentDate, setDocumentDate] = useState("");

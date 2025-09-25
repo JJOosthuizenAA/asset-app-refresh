@@ -7,6 +7,18 @@ import { dateOrDash, fmtMoney } from "@/lib/format";
 import { getCountryLabel } from "@/lib/countries";
 import HelpPopover from "@/components/HelpPopover";
 
+const DOCUMENT_CATEGORY_LABELS: Record<string, string> = {
+  Invoice: "Invoice",
+  Warranty: "Warranty",
+  Policy: "Policy",
+  Photo: "Photo",
+  Receipt: "Receipt",
+  Quote: "Quote",
+  Manual: "Manual",
+  Service: "Service Report",
+  Other: "Other",
+};
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -62,11 +74,18 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
       orderBy: { dueDate: "asc" },
     }),
     prisma.document.findMany({
-      where: { parentType: ParentType.Property, parentId: property.id },
+      where: {
+        parentType: ParentType.Property,
+        parentId: property.id,
+        deletedAt: null,
+      },
       select: {
         id: true,
         title: true,
         description: true,
+        category: true,
+        documentDate: true,
+        filePath: true,
         createdAt: true,
       },
       orderBy: { createdAt: "desc" },
@@ -236,14 +255,18 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
               <tbody>
                 {documents.map((document) => (
                   <tr key={document.id}>
-                    <td>{document.category}</td>
+                    <td>{DOCUMENT_CATEGORY_LABELS[document.category] ?? document.category}</td>
                     <td>
-                      <a href={document.filePath} target="_blank" rel="noopener noreferrer" className="underline">
-                        {document.title}
-                      </a>
+                      {document.filePath ? (
+                        <a href={document.filePath} target="_blank" rel="noopener noreferrer" className="underline">
+                          {document.title || "Untitled document"}
+                        </a>
+                      ) : (
+                        <span>{document.title || "Untitled document"}</span>
+                      )}
                     </td>
-                    <td>{document.description ?? "--"}</td>
-                    <td>{dateOrDash(document.documentDate)}</td>
+                    <td>{document.description?.trim() ? document.description : "--"}</td>
+                    <td>{document.documentDate ? dateOrDash(document.documentDate) : "--"}</td>
                     <td>{dateOrDash(document.createdAt)}</td>
                   </tr>
                 ))}
