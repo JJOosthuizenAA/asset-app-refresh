@@ -30,7 +30,6 @@ export default async function NavBar() {
 
                 {/* Middle nav links */}
                 <nav className="nav-links">
-                    <Link href="/dashboard" className="link">Dashboard</Link>
                     <Link href="/properties" className="link">Properties</Link>
                     <Link href="/vehicles" className="link">Vehicles</Link>
                     <Link href="/personal" className="link">Personal</Link>

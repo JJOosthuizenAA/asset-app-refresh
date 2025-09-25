@@ -505,6 +505,16 @@ enum AssetType {
 
   Trailer
 
+  Appliance
+
+  Electronics
+
+  Furniture
+
+  Tool
+
+  Fixture
+
   Other
 }
 

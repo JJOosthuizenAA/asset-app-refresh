@@ -626,3 +626,62 @@ textarea {
 
 
 
+.help-popover {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.help-popover__trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(15, 23, 42, 0.18);
+    background: white;
+    color: #1e293b;
+    cursor: pointer;
+}
+
+.help-popover__trigger:hover {
+    background: #f1f5f9;
+}
+
+.help-popover__trigger:focus-visible {
+    outline: 2px solid #0ea5e9;
+    outline-offset: 2px;
+}
+
+.help-popover__panel {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    z-index: 20;
+    min-width: 220px;
+    max-width: 320px;
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    background: white;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+    font-size: 0.875rem;
+    line-height: 1.4;
+    color: #0f172a;
+}
+
+.help-popover__panel p {
+    margin: 0;
+}
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}

@@ -1,10 +1,11 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ParentType } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireAccountId } from "@/lib/current-account";
 import { dateOrDash, fmtMoney } from "@/lib/format";
 import { getCountryLabel } from "@/lib/countries";
+import HelpPopover from "@/components/HelpPopover";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -106,7 +107,12 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
         </div>
         <div className="card-content" style={{ display: "grid", gap: "1rem", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
           <div>
-            <div className="text-muted-foreground text-xs">Ownership</div>
+            <div className="text-muted-foreground text-xs" style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+              <span>Ownership</span>
+              <HelpPopover title="Ownership status help">
+                Owner means you currently hold the property. Rental flags a leased property, while Sold keeps a record after it leaves your portfolio.
+              </HelpPopover>
+            </div>
             <div>{property.ownershipStatus}</div>
           </div>
           <div>

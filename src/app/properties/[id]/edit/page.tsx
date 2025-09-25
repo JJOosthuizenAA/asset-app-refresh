@@ -1,4 +1,4 @@
-﻿// src/app/properties/[id]/edit/page.tsx
+// src/app/properties/[id]/edit/page.tsx
 import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { revalidatePath } from "next/cache";
@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { requireAccountId } from "@/lib/current-account";
 import { COUNTRY_OPTIONS } from "@/lib/countries";
 import { OwnershipStatus } from "@prisma/client";
+import HelpPopover from "@/components/HelpPopover";
 import { dateOrDash } from "@/lib/format";
 
 export const runtime = "nodejs";
@@ -126,7 +127,12 @@ export default async function EditPropertyPage({ params }: { params: { id: strin
 
                     <div className="grid grid-2">
                         <label className="field">
-                            <span className="label">Ownership</span>
+                            <span className="label" style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                                <span>Ownership</span>
+                                <HelpPopover title="Ownership status help">
+                                    Owner means you currently hold the property. Rental flags a leased property, while Sold keeps a record after it leaves your portfolio.
+                                </HelpPopover>
+                            </span>
                             <select name="ownershipStatus" defaultValue={property.ownershipStatus}>
                                 {Object.values(OwnershipStatus).map((status) => (
                                     <option key={status} value={status}>{status}</option>
