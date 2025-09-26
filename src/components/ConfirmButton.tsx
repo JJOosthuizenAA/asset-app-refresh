@@ -3,21 +3,27 @@
 
 import React from "react";
 
+type ConfirmButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+    confirmText?: string;
+};
+
 export function ConfirmButton({
     children,
     confirmText = "Are you sure?",
-    className = "",
-}: {
-    children: React.ReactNode;
-    confirmText?: string;
-    className?: string;
-}) {
+    onClick,
+    type,
+    ...buttonProps
+}: ConfirmButtonProps) {
     return (
         <button
-            type="submit"
-            className={className}
-            onClick={(e) => {
-                if (!confirm(confirmText)) e.preventDefault();
+            {...buttonProps}
+            type={type ?? "submit"}
+            onClick={(event) => {
+                if (!confirm(confirmText)) {
+                    event.preventDefault();
+                    return;
+                }
+                onClick?.(event);
             }}
         >
             {children}

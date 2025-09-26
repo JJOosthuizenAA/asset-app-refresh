@@ -1,5 +1,6 @@
 ﻿// src/app/warranties/page.tsx
 import Link from "next/link";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireAccountId } from "@/lib/current-account";
@@ -222,15 +223,35 @@ export default async function WarrantiesIndex({ searchParams }: { searchParams: 
                                             )}
                                         </td>
                                         <td>
-                                            <div className="actions-flex" style={{ gridTemplateColumns: "110px 110px 110px" }}>
+                                            <div className="actions-flex warranties">
                                                 <span className="action-slot">
-                                                    <Link href={`/warranties/${warranty.id}`} className="btn btn-outline">View</Link>
+                                                    <Link
+                                                        href={`/warranties/${warranty.id}`}
+                                                        className="btn btn-outline btn-icon"
+                                                        aria-label="View warranty"
+                                                        title="View warranty"
+                                                    >
+                                                        <Eye size={16} aria-hidden="true" />
+                                                    </Link>
                                                 </span>
                                                 <span className="action-slot">
-                                                    <Link href={`/warranties/${warranty.id}/edit`} className="btn btn-outline">Edit</Link>
+                                                    <Link
+                                                        href={`/warranties/${warranty.id}/edit`}
+                                                        className="btn btn-outline btn-icon"
+                                                        aria-label="Edit warranty"
+                                                        title="Edit warranty"
+                                                    >
+                                                        <Pencil size={16} aria-hidden="true" />
+                                                    </Link>
                                                 </span>
                                                 <DeleteWarrantyButton
                                                     className="action-slot"
+                                                    buttonProps={{
+                                                        className: "btn btn-danger btn-icon",
+                                                        "aria-label": "Delete warranty",
+                                                        title: "Delete warranty",
+                                                        children: <Trash2 size={16} aria-hidden="true" />
+                                                    }}
                                                     deleteAction={deleteWarrantyAction.bind(null, warranty.id, currentSearch)}
                                                 />
                                             </div>

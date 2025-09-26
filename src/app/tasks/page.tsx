@@ -1,5 +1,7 @@
 // src/app/tasks/page.tsx
 import Link from "next/link";
+import { Eye, Pencil, Trash2 } from "lucide-react";
+import { TaskActionsMenu } from "./task-actions-menu";
 import { prisma } from "@/lib/db";
 import { requireAccountId } from "@/lib/current-account";
 import { revalidatePath } from "next/cache";
@@ -115,6 +117,85 @@ async function deleteTask(taskId: string) {
     revalidatePath("/tasks");
 }
 
+async function cancelTask(taskId: string, currentSearch: string) {
+    "use server";
+    const accountId = await requireAccountId();
+    const targetPath = currentSearch ? "/tasks?" + currentSearch : "/tasks";
+
+    const existing = await prisma.maintenanceTask.findFirst({
+        where: {
+            id: taskId,
+            OR: [
+                { asset: { accountId } },
+                { template: { accountId } },
+                { assetId: null, templateId: null },
+            ],
+        },
+        select: {
+            id: true,
+            cancelledAt: true,
+        },
+    });
+    if (!existing) throw new Error("Task not found");
+
+    if (existing.cancelledAt) {
+        revalidatePath(targetPath);
+        return;
+    }
+
+    await prisma.maintenanceTask.update({
+        where: { id: taskId },
+        data: {
+            cancelledAt: startOfDay(new Date()),
+            cancelReason: "Cancelled manually",
+            completed: false,
+        },
+    });
+
+    revalidatePath(targetPath);
+}
+
+
+
+async function restoreTask(taskId: string, currentSearch: string) {
+    "use server";
+    const accountId = await requireAccountId();
+    const targetPath = currentSearch ? "/tasks?" + currentSearch : "/tasks";
+
+    const existing = await prisma.maintenanceTask.findFirst({
+        where: {
+            id: taskId,
+            OR: [
+                { asset: { accountId } },
+                { template: { accountId } },
+                { assetId: null, templateId: null },
+            ],
+        },
+        select: {
+            id: true,
+            cancelledAt: true,
+        },
+    });
+    if (!existing) throw new Error("Task not found");
+
+    if (!existing.cancelledAt) {
+        revalidatePath(targetPath);
+        return;
+    }
+
+    await prisma.maintenanceTask.update({
+        where: { id: taskId },
+        data: {
+            cancelledAt: null,
+            cancelReason: null,
+        },
+    });
+
+    revalidatePath(targetPath);
+}
+
+
+
 async function runSchedulerAction() {
     "use server";
     const accountId = await requireAccountId();
@@ -137,7 +218,7 @@ export default async function TasksIndex({ searchParams }: { searchParams: Searc
 
     // Parse params defensively
     const q = (getParam(searchParams, "q") || "").trim();
-    // ⬇️ renamed from "status" → "statusFilter" to avoid collisions
+    // renamed from "status" -> "statusFilter" to avoid collisions
     const statusRaw = (getParam(searchParams, "statusFilter") || "all").trim().toLowerCase();
     const status: "all" | "open" | "completed" | "cancelled" =
         statusRaw === "open" || statusRaw === "completed" || statusRaw === "cancelled"
@@ -238,7 +319,7 @@ export default async function TasksIndex({ searchParams }: { searchParams: Searc
                 <h1>Tasks</h1>
                 <div className="space-x-2">
                     <form action={runSchedulerAction} style={{ display: "inline" }}>
-                        <button type="submit" className="btn btn-outline">Run scheduler</button>
+                        <button type="submit" className="btn btn-outline">Run Scheduler</button>
                     </form>
                     <Link href="/tasks/templates" className="btn btn-outline">Templates</Link>
                     <Link href="/tasks/new" className="btn btn-primary">New Task</Link>
@@ -250,20 +331,18 @@ export default async function TasksIndex({ searchParams }: { searchParams: Searc
                 <div className="card-header">
                     <div className="card-title">Filter</div>
                 </div>
-                <div className="card-content">
+                <div className="card-content" style={{ display: "grid", gap: "1rem" }}>
                     <div className="grid grid-3">
-                        {/* Search spans two columns on wide screens */}
-                        <div className="field span-2">
+                        <div className="field">
                             <label htmlFor="q" className="label">Search</label>
                             <input
                                 id="q"
                                 name="q"
                                 type="text"
                                 defaultValue={q}
-                                placeholder="Title, notes, asset name…"
+                                placeholder="Title, notes, asset name..."
                             />
                         </div>
-
                         <div className="field">
                             <label htmlFor="statusFilter" className="label">Status</label>
                             <select id="statusFilter" name="statusFilter" defaultValue={status}>
@@ -273,17 +352,18 @@ export default async function TasksIndex({ searchParams }: { searchParams: Searc
                                 <option value="cancelled">Cancelled</option>
                             </select>
                         </div>
-
                         <div className="field">
                             <label htmlFor="asset" className="label">Asset</label>
                             <select id="asset" name="asset" defaultValue={assetFilter || ""}>
-                                <option value="">All</option>
+                                <option value="">All assets</option>
                                 {assets.map(a => (
                                     <option key={a.id} value={a.id}>{a.name}</option>
                                 ))}
                             </select>
                         </div>
+                    </div>
 
+                    <div className="grid grid-3">
                         <div className="field">
                             <label htmlFor="sort" className="label">Sort by</label>
                             <select id="sort" name="sort" defaultValue={sort}>
@@ -292,18 +372,16 @@ export default async function TasksIndex({ searchParams }: { searchParams: Searc
                                 <option value="title">Title</option>
                             </select>
                         </div>
-
                         <div className="field">
                             <label htmlFor="dir" className="label">Direction</label>
                             <select id="dir" name="dir" defaultValue={dir}>
-                                <option value="asc">Asc</option>
-                                <option value="desc">Desc</option>
+                                <option value="asc">Ascending</option>
+                                <option value="desc">Descending</option>
                             </select>
                         </div>
-
                         <div className="field" style={{ alignSelf: "end" }}>
                             <div className="space-x-2">
-                                <button type="submit" className="btn btn-primary">Apply</button>
+                                <button type="submit" className="btn btn-outline">Apply</button>
                                 <Link href="/tasks" className="btn btn-outline">Reset</Link>
                             </div>
                         </div>
@@ -322,13 +400,13 @@ export default async function TasksIndex({ searchParams }: { searchParams: Searc
                     <table className="table">
                         <thead>
                             <tr>
-                                <th style={{ width: "28%" }}>Task</th>
+                                <th style={{ width: "26%" }}>Task</th>
                                 <th style={{ width: "16%" }}>Asset</th>
                                 <th style={{ width: "16%" }}>Template</th>
                                 <th style={{ width: "12%" }}>Due</th>
-                                <th style={{ width: "12%" }}>Next due</th>
                                 <th style={{ width: "12%" }}>Status</th>
-                                <th style={{ width: "14%" }}>Actions</th>
+                                <th style={{ width: "9%" }}>Progress</th>
+                                <th style={{ width: "9%" }}>Actions</th>
                             </tr>
                         </thead>
 
@@ -340,8 +418,11 @@ export default async function TasksIndex({ searchParams }: { searchParams: Searc
                                             <Link href={`/tasks/${t.id}`}>{t.title}</Link>
                                         </div>
                                         {t.notes ? (
-                                            <div className="text-muted-foreground" style={{ marginTop: 4, fontSize: ".9rem" }}>
-                                                {t.notes.length > 120 ? `${t.notes.slice(0, 120)}...` : t.notes}
+                                            <div
+                                                className="text-muted-foreground note-preview"
+                                                title={t.notes}
+                                            >
+                                                {t.notes}
                                             </div>
                                         ) : null}
                                     </td>
@@ -362,15 +443,7 @@ export default async function TasksIndex({ searchParams }: { searchParams: Searc
                                         )}
                                     </td>
 
-                                    <td>{t.dueDate ? t.dueDate.toISOString().slice(0, 10) : "--"}</td>
-
-                                    <td>
-                                        {t.isRecurring ? (
-                                            t.nextDueDate ? t.nextDueDate.toISOString().slice(0, 10) : "--"
-                                        ) : (
-                                            <span className="text-muted-foreground">--</span>
-                                        )}
-                                    </td>
+                                    <td className="text-right">{t.dueDate ? t.dueDate.toISOString().slice(0, 10) : "--"}</td>
 
                                     <td>
                                         {t.cancelledAt ? (
@@ -392,20 +465,48 @@ export default async function TasksIndex({ searchParams }: { searchParams: Searc
                                         ) : null}
                                     </td>
 
-                                    <td>
-                                        <div className="actions-flex">
-                                            <form
-                                                className="action-slot"
-                                                action={async () => {
-                                                    "use server";
-                                                    await toggleComplete(t.id, !t.completed, currentSearch);
-                                                }}
+                                    <td className="task-toggle">
+                                        <form
+                                            className="task-toggle-form"
+                                            action={async () => {
+                                                "use server";
+                                                await toggleComplete(t.id, !t.completed, currentSearch);
+                                            }}
+                                        >
+                                            <button
+                                                type="submit"
+                                                className="btn btn-outline"
+                                                disabled={!!t.cancelledAt}
+                                                title={t.cancelledAt ? "Cancelled tasks cannot be updated" : t.completed ? "Reopen task" : "Mark task complete"}
                                             >
-                                                <button type="submit" className="btn btn-outline">
-                                                    {t.completed ? "Reopen" : "Mark Complete"}
-                                                </button>
-                                            </form>
+                                                {t.completed ? "Reopen" : "Mark Complete"}
+                                            </button>
+                                        </form>
+                                    </td>
 
+                                    <td>
+                                        
+                                                                                <div className="actions-flex task-icons">
+                                            <span className="action-slot">
+                                                <Link
+                                                    href={`/tasks/${t.id}`}
+                                                    className="btn btn-outline btn-icon"
+                                                    aria-label="View task"
+                                                    title="View task"
+                                                >
+                                                    <Eye size={16} aria-hidden="true" />
+                                                </Link>
+                                            </span>
+                                            <span className="action-slot">
+                                                <Link
+                                                    href={`/tasks/${t.id}/edit`}
+                                                    className="btn btn-outline btn-icon"
+                                                    aria-label="Edit task"
+                                                    title="Edit task"
+                                                >
+                                                    <Pencil size={16} aria-hidden="true" />
+                                                </Link>
+                                            </span>
                                             <form
                                                 className="action-slot"
                                                 action={async () => {
@@ -413,15 +514,51 @@ export default async function TasksIndex({ searchParams }: { searchParams: Searc
                                                     await deleteTask(t.id);
                                                 }}
                                             >
-                                                <button type="submit" className="btn btn-danger">Delete</button>
+                                                <button
+                                                    type="submit"
+                                                    className="btn btn-danger btn-icon"
+                                                    aria-label="Delete task"
+                                                    title="Delete task"
+                                                >
+                                                    <Trash2 size={16} aria-hidden="true" />
+                                                </button>
                                             </form>
-
                                             <span className="action-slot">
-                                                <Link href={`/tasks/${t.id}`} className="btn btn-outline">View</Link>
-                                            </span>
-
-                                            <span className="action-slot">
-                                                <Link href={`/tasks/${t.id}/edit`} className="btn btn-outline">Edit</Link>
+                                                <TaskActionsMenu>
+                                                    {!t.cancelledAt ? (
+                                                        <form
+                                                            action={async () => {
+                                                                "use server";
+                                                                await cancelTask(t.id, currentSearch);
+                                                            }}
+                                                        >
+                                                            <button
+                                                                type="submit"
+                                                                className="action-menu__item action-menu__item--danger"
+                                                                data-menu-item
+                                                                role="menuitem"
+                                                            >
+                                                                Cancel task
+                                                            </button>
+                                                        </form>
+                                                    ) : (
+                                                        <form
+                                                            action={async () => {
+                                                                "use server";
+                                                                await restoreTask(t.id, currentSearch);
+                                                            }}
+                                                        >
+                                                            <button
+                                                                type="submit"
+                                                                className="action-menu__item"
+                                                                data-menu-item
+                                                                role="menuitem"
+                                                            >
+                                                                Restore task
+                                                            </button>
+                                                        </form>
+                                                    )}
+                                                </TaskActionsMenu>
                                             </span>
                                         </div>
                                     </td>
@@ -487,3 +624,5 @@ export default async function TasksIndex({ searchParams }: { searchParams: Searc
         </main>
     );
 }
+
+

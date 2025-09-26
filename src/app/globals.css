@@ -1,6 +1,7 @@
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/* ------------------------------------------------------------
    Plain CSS base + small utility shim (no Tailwind).
-   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+   ------------------------------------------------------------ */
+
 
 /* Reset-ish */
 * {
@@ -18,7 +19,7 @@ body {
   color: #111827;
   /* gray-900 */
   background: #ffffff;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 /* Typography */
@@ -43,7 +44,7 @@ h2 {
 small,
 .text-xs {
   font-size: .75rem;
-  color: #6b7280;
+  color: #4b5563;
 }
 
 /* Links */
@@ -179,7 +180,7 @@ a:hover {
 }
 
 .text-muted-foreground {
-  color: #64748b;
+  color: #475569;
 }
 
 /* slightly darker */
@@ -225,6 +226,32 @@ a:hover {
 
 .btn:hover {
   background: #f3f4f6;
+}
+
+.btn.btn-icon {
+  padding: 0;
+  width: 100%;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  gap: 0;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn.btn-icon:hover {
+  background-color: rgba(37, 99, 235, 0.08);
+}
+
+
+.btn.btn-icon:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.45);
+  outline-offset: 2px;
+}
+
+.btn.btn-icon.btn-danger:focus-visible {
+  outline-color: rgba(220, 38, 38, 0.45);
 }
 
 /* Button variants */
@@ -316,6 +343,15 @@ textarea:focus {
   overflow: hidden;
 }
 
+.table tbody tr:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+.table tbody tr:hover {
+  background-color: #eef2ff;
+}
+
+
 .table thead th {
   text-align: left;
   font-weight: 600;
@@ -328,6 +364,20 @@ textarea:focus {
   padding: .75rem 1rem;
   border-top: 1px solid #e5e7eb;
 }
+
+
+.note-preview {
+  font-size: 0.9rem;
+  margin-top: 4px;
+  line-height: 1.4;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
 
 /* Badges */
 .badge {
@@ -575,7 +625,7 @@ textarea {
   grid-column: span 2;
 }
 
-/* Actions column â€” unified grid so buttons align perfectly
+/* Actions column ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â unified grid so buttons align perfectly
    Per-page helpers provide exact column templates. */
 .actions-flex {
   display: grid;
@@ -609,19 +659,110 @@ textarea {
 }
 
 /* Per-page column templates */
-/* Tasks: [Mark/Reopen] [Delete] [View] [Edit] */
-.actions-flex.tasks {
-  grid-template-columns: 140px 110px 110px 110px;
+/* Tasks (list icons): [View] [Edit] [Delete] */
+.actions-flex.task-icons {
+  grid-template-columns: repeat(4, 52px);
 }
 
+.task-toggle {
+  display: flex;
+  align-items: center;
+}
+
+.task-toggle-form {
+  margin: 0;
+}
+
+.task-toggle-form .btn {
+  width: auto;
+  min-width: 150px;
+}
+
+/* Templates: [Edit] [Pause/Resume] [Delete] */
+.action-menu {
+  position: relative;
+  width: 100%;
+}
+
+.action-menu summary {
+  list-style: none;
+}
+
+.action-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.action-menu__trigger {
+  width: 100%;
+}
+
+.action-menu__popover {
+  display: none;
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 25;
+  min-width: 11rem;
+  padding: 0.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: white;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+}
+
+.action-menu[open] .action-menu__trigger {
+  background: #e2e8f0;
+}
+
+.action-menu[open] .action-menu__popover {
+  display: block;
+}
+
+.action-menu__popover form {
+  margin: 0;
+}
+
+.action-menu__item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: #0f172a;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.action-menu__item:hover,
+.action-menu__item:focus-visible {
+  background: #f1f5f9;
+}
+
+.action-menu__item:focus-visible {
+  outline: 2px solid #0ea5e9;
+  outline-offset: 2px;
+}
+
+.action-menu__item--danger {
+  color: #b91c1c;
+}
+
+.actions-flex.templates {
+  grid-template-columns: 52px 52px 52px;
+}
 /* Warranties: [View] [Edit] [Delete] */
 .actions-flex.warranties {
-  grid-template-columns: 110px 110px 110px;
+  grid-template-columns: 52px 52px 52px;
 }
 
 /* Assets: [View] [Edit] [Delete] */
 .actions-flex.assets {
-  grid-template-columns: 110px 110px 110px;
+  grid-template-columns: 52px 52px 52px;
 }
 
 
@@ -710,7 +851,7 @@ textarea {
 textarea {
   font-family: inherit;
   font-size: 0.95rem;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 input[type="date"] {
@@ -774,3 +915,4 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   align-items: center;
   gap: 0.5rem;
 }
+

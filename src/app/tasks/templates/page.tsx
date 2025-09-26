@@ -1,5 +1,6 @@
 // src/app/tasks/templates/page.tsx
 import Link from "next/link";
+import { Pause, Pencil, Play, Trash2 } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireAccountId } from "@/lib/current-account";
 import { revalidatePath } from "next/cache";
@@ -130,8 +131,11 @@ export default async function MaintenanceTemplatesPage() {
                                         <td>
                                             <div className="font-medium">{t.title}</div>
                                             {t.notes ? (
-                                                <div className="text-muted-foreground" style={{ marginTop: 4, fontSize: "0.9rem" }}>
-                                                    {t.notes.length > 120 ? `${t.notes.slice(0, 120)}...` : t.notes}
+                                                <div
+                                                    className="text-muted-foreground note-preview"
+                                                    title={t.notes}
+                                                >
+                                                    {t.notes}
                                                 </div>
                                             ) : null}
                                         </td>
@@ -146,8 +150,8 @@ export default async function MaintenanceTemplatesPage() {
                                             )}
                                         </td>
                                         <td>{describeCadence(t.cadenceMonths)}</td>
-                                        <td>{t.leadTimeDays ? `${t.leadTimeDays} day${t.leadTimeDays === 1 ? "" : "s"}` : "Same day"}</td>
-                                        <td>{formatDate(t.nextScheduledAt)}</td>
+                                        <td className="text-right">{t.leadTimeDays ? `${t.leadTimeDays} day${t.leadTimeDays === 1 ? "" : "s"}` : "Same day"}</td>
+                                        <td className="text-right">{formatDate(t.nextScheduledAt)}</td>
                                         <td>
                                             {t.active ? (
                                                 <span className="badge badge-open">Active</span>
@@ -159,18 +163,43 @@ export default async function MaintenanceTemplatesPage() {
                                             </div>
                                         </td>
                                         <td>
-                                            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                                                <Link href={`/tasks/templates/${t.id}/edit`} className="btn btn-outline">Edit</Link>
-                                                <form action={toggleTemplateAction}>
+                                            <div className="actions-flex templates">
+                                                <span className="action-slot">
+                                                    <Link
+                                                        href={`/tasks/templates/${t.id}/edit`}
+                                                        className="btn btn-outline btn-icon"
+                                                        aria-label="Edit template"
+                                                        title="Edit template"
+                                                    >
+                                                        <Pencil size={16} aria-hidden="true" />
+                                                    </Link>
+                                                </span>
+                                                <form className="action-slot" action={toggleTemplateAction}>
                                                     <input type="hidden" name="id" value={t.id} />
                                                     <input type="hidden" name="active" value={t.active ? "false" : "true"} />
-                                                    <button type="submit" className="btn btn-outline">
-                                                        {t.active ? "Pause" : "Resume"}
+                                                    <button
+                                                        type="submit"
+                                                        className="btn btn-outline btn-icon"
+                                                        aria-label={t.active ? "Pause template" : "Resume template"}
+                                                        title={t.active ? "Pause template" : "Resume template"}
+                                                    >
+                                                        {t.active ? (
+                                                            <Pause size={16} aria-hidden="true" />
+                                                        ) : (
+                                                            <Play size={16} aria-hidden="true" />
+                                                        )}
                                                     </button>
                                                 </form>
-                                                <form action={deleteTemplateAction}>
+                                                <form className="action-slot" action={deleteTemplateAction}>
                                                     <input type="hidden" name="id" value={t.id} />
-                                                    <ConfirmButton className="btn btn-danger" confirmText="Delete template?">Delete</ConfirmButton>
+                                                    <ConfirmButton
+                                                        className="btn btn-danger btn-icon"
+                                                        confirmText="Delete template?"
+                                                        aria-label="Delete template"
+                                                        title="Delete template"
+                                                    >
+                                                        <Trash2 size={16} aria-hidden="true" />
+                                                    </ConfirmButton>
                                                 </form>
                                             </div>
                                         </td>

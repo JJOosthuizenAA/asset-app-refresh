@@ -1,5 +1,6 @@
-﻿// src/app/assets/page.tsx
+// src/app/assets/page.tsx
 import Link from "next/link";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { AssetType, ParentType } from "@prisma/client";
@@ -173,7 +174,7 @@ export default async function AssetsIndex({
         for (const parent of items) {
             const value = `${type}:${parent.id}`;
             parentLookup.set(value, parent);
-            containerOptions.push({ value, label: `${ParentTypeLabels[type]} • ${parent.label}` });
+            containerOptions.push({ value, label: `${ParentTypeLabels[type]} - ${parent.label}` });
         }
     }
 
@@ -207,16 +208,13 @@ export default async function AssetsIndex({
 
     return (
         <main className="container py-8">
-            <h1>Assets</h1>
-
-            <div className="space-x-2" style={{ marginTop: 12 }}>
-                <Link href="/assets/new" className="btn btn-primary">
-                    New Asset
-                </Link>
+            <div className="mb-6" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <h1>Assets</h1>
+                <Link href="/assets/new" className="btn btn-primary">New Asset</Link>
             </div>
 
             <form method="get" className="card" style={{ marginTop: "1rem" }}>
-                <div className="card-content" style={{ display: "grid", gap: "0.75rem" }}>
+                <div className="card-content" style={{ display: "grid", gap: "1rem" }}>
                     <div className="grid grid-3">
                         <div className="field">
                             <label htmlFor="q" className="label">Search</label>
@@ -292,13 +290,13 @@ export default async function AssetsIndex({
                     <table className="table">
                         <thead>
                             <tr>
-                                <th>Name</th>
-                                <th>Type</th>
-                                <th>Container</th>
-                                <th>Location</th>
-                                <th>Purchase date</th>
-                                <th>Price</th>
-                                <th style={{ width: 360 }}>Actions</th>
+                                <th style={{ width: "26%" }}>Asset</th>
+                                <th style={{ width: "12%" }}>Type</th>
+                                <th style={{ width: "18%" }}>Container</th>
+                                <th style={{ width: "14%" }}>Location</th>
+                                <th style={{ width: "12%" }}>Purchase date</th>
+                                <th style={{ width: "10%" }}>Price</th>
+                                <th style={{ width: 180 }}>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -320,7 +318,7 @@ export default async function AssetsIndex({
 
                                     const parentKey = `${assetRow.parentType}:${assetRow.parentId}`;
                                     const parent = parentLookup.get(parentKey);
-                                    const parentLabel = parent?.label ?? "—";
+                                    const parentLabel = parent?.label ?? "--";
                                     const parentTypeLabel = ParentTypeLabels[assetRow.parentType];
 
                                     return (
@@ -339,28 +337,44 @@ export default async function AssetsIndex({
                                                 <div className="text-xs text-muted-foreground">{parentTypeLabel}</div>
                                             </td>
                                             <td>{assetRow.location ?? "-"}</td>
-                                            <td>{dateStr}</td>
-                                            <td>{priceStr}</td>
+                                            <td className="text-right">{dateStr}</td>
+                                            <td className="text-right">{priceStr}</td>
                                             <td>
                                                 <div className="actions-flex assets">
-                                                    <Link href={`/assets/${assetRow.id}`} className="btn btn-outline">
-                                                        View
-                                                    </Link>
-                                                    <Link href={`/assets/${assetRow.id}/edit`} className="btn btn-outline">
-                                                        Edit
-                                                    </Link>
+                                                    <span className="action-slot">
+                                                        <Link
+                                                            href={`/assets/${assetRow.id}`}
+                                                            className="btn btn-outline btn-icon"
+                                                            aria-label="View asset"
+                                                            title="View asset"
+                                                        >
+                                                            <Eye size={16} aria-hidden="true" />
+                                                        </Link>
+                                                    </span>
+                                                    <span className="action-slot">
+                                                        <Link
+                                                            href={`/assets/${assetRow.id}/edit`}
+                                                            className="btn btn-outline btn-icon"
+                                                            aria-label="Edit asset"
+                                                            title="Edit asset"
+                                                        >
+                                                            <Pencil size={16} aria-hidden="true" />
+                                                        </Link>
+                                                    </span>
                                                     <form action={deleteAssetAction} className="action-slot">
                                                         <input type="hidden" name="id" value={assetRow.id} />
                                                         <input type="hidden" name="prev" value={currentUrl} />
                                                         <button
                                                             type="submit"
-                                                            className="btn btn-danger"
+                                                            className="btn btn-danger btn-icon"
+                                                            aria-label="Delete asset"
+                                                            title="Delete asset"
                                                             formAction={async (fd) => {
                                                                 "use server";
                                                                 await deleteAssetAction(fd);
                                                             }}
                                                         >
-                                                            Delete
+                                                            <Trash2 size={16} aria-hidden="true" />
                                                         </button>
                                                     </form>
                                                 </div>
@@ -418,4 +432,5 @@ export default async function AssetsIndex({
         </main>
     );
 }
+
 
