@@ -88,6 +88,7 @@ export default async function MaintenanceTemplatesPage() {
         <main className="container py-8">
             <div className="mb-6" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
+                    <div style={{ marginBottom: '0.75rem' }}><Link href="/tasks" className="btn btn-outline">Back to Tasks</Link></div>
                     <h1>Maintenance Templates</h1>
                     <p className="text-muted-foreground" style={{ marginTop: 4 }}>
                         Define recurring jobs so follow-up tasks are generated automatically.
@@ -97,7 +98,7 @@ export default async function MaintenanceTemplatesPage() {
                     <form action={runSchedulerAction} style={{ display: "inline" }}>
                         <button type="submit" className="btn btn-outline">Run scheduler</button>
                     </form>
-                    <Link href="/tasks/templates/new" className="btn btn-primary">New template</Link>
+                    <Link href="/tasks/templates/new" className="btn btn-primary">New Template</Link>
                 </div>
             </div>
 
@@ -107,7 +108,7 @@ export default async function MaintenanceTemplatesPage() {
                         <p className="text-muted-foreground" style={{ marginBottom: 12 }}>
                             No templates yet. Create one to start scheduling maintenance automatically.
                         </p>
-                        <Link href="/tasks/templates/new" className="btn btn-primary">Create template</Link>
+                        <Link href="/tasks/templates/new" className="btn btn-primary">Create Template</Link>
                     </div>
                 </section>
             ) : (
