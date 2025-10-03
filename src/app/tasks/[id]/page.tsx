@@ -34,6 +34,9 @@ export default async function ViewTaskPage({ params }: { params: { id: string } 
             cancelReason: true,
             createdAt: true,
             updatedAt: true,
+            preferredSupplierId: true,
+            selfServiceSelected: true,
+            preferredSupplier: { select: { id: true, name: true, contactEmail: true, contactPhone: true } },
             asset: { select: { id: true, name: true, accountId: true } },
             template: {
                 select: {
@@ -123,6 +126,20 @@ export default async function ViewTaskPage({ params }: { params: { id: string } 
                                     <span className="text-muted-foreground">- None -</span>
                                 )}
                             </div>
+                        </div>
+
+                        <div className="field">
+                            <label className="label">Preferred supplier</label>
+                            <div>
+                                {task.selfServiceSelected ? (
+                                    <span className="text-muted-foreground">Self (do it myself)</span>
+                                ) : task.preferredSupplier ? (
+                                    task.preferredSupplier.name
+                                ) : (
+                                    <span className="text-muted-foreground">Unknown Supplier</span>
+                                )}
+                            </div>
+                            <small className="text-xs text-muted-foreground">Manage options under <Link href="/suppliers">Suppliers</Link>.</small>
                         </div>
 
                         <div className="field">

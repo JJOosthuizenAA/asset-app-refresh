@@ -1,6 +1,7 @@
-﻿// src/app/api/seed-demo/route.ts
+// src/app/api/seed-demo/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { ensureUnknownSupplier } from "@/lib/suppliers";
 import { ParentType } from "@prisma/client";
 
 export const runtime = "nodejs";
@@ -23,6 +24,27 @@ export async function GET() {
                 currencyCode: "ZAR",
             },
             select: { id: true, currencyCode: true },
+        });
+
+        const unknownSupplierId = await ensureUnknownSupplier(prisma, account.id);
+
+        await prisma.accountAddress.upsert({
+            where: { accountId: account.id },
+            update: {
+                addressLine1: "123 Demo Street",
+                city: "Cape Town",
+                region: "Western Cape",
+                postalCode: "8000",
+                countryCode: "ZA",
+            },
+            create: {
+                accountId: account.id,
+                addressLine1: "123 Demo Street",
+                city: "Cape Town",
+                region: "Western Cape",
+                postalCode: "8000",
+                countryCode: "ZA",
+            },
         });
 
         const property = await prisma.property.upsert({
@@ -48,7 +70,7 @@ export async function GET() {
 
         const assetSeed = [
             {
-                name: "MacBook Pro 14"",
+                name: "MacBook Pro 14",
                 category: "Electronics",
                 location: "Home Office",
                 serial: "MBP-14-DEMO-001",
@@ -74,27 +96,37 @@ export async function GET() {
                     parentId: property.id,
                     name: seed.name,
                 },
-                select: { id: true, name: true },
+                select: { id: true, name: true, primarySupplierId: true },
             });
 
             const purchasePriceCents = toCents(seed.purchasePrice);
 
-            const created =
-                existing ??
-                (await prisma.asset.create({
-                    data: {
-                        accountId: account.id,
-                        parentType: ParentType.Property,
-                        parentId: property.id,
-                        name: seed.name,
-                        category: seed.category,
-                        serial: seed.serial,
-                        location: seed.location,
-                        purchaseDate: seed.purchaseDate,
-                        purchasePriceCents: purchasePriceCents ?? undefined,
-                    },
-                    select: { id: true, name: true },
-                }));
+            if (existing) {
+                if (!existing.primarySupplierId) {
+                    await prisma.asset.update({
+                        where: { id: existing.id },
+                        data: { primarySupplierId: unknownSupplierId },
+                    });
+                }
+                assets.push({ id: existing.id, name: existing.name });
+                continue;
+            }
+
+            const created = await prisma.asset.create({
+                data: {
+                    accountId: account.id,
+                    parentType: ParentType.Property,
+                    parentId: property.id,
+                    name: seed.name,
+                    category: seed.category,
+                    serial: seed.serial,
+                    location: seed.location,
+                    purchaseDate: seed.purchaseDate,
+                    purchasePriceCents: purchasePriceCents ?? undefined,
+                    primarySupplierId: unknownSupplierId,
+                },
+                select: { id: true, name: true },
+            });
 
             assets.push(created);
         }
@@ -154,3 +186,7 @@ export async function GET() {
         );
     }
 }
+
+
+
+

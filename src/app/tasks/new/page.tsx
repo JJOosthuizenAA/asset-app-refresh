@@ -1,8 +1,10 @@
 // src/app/tasks/new/page.tsx
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+import { ensureUnknownSupplier } from "@/lib/suppliers";
 import { requireAccountId } from "@/lib/current-account";
 import { createTaskAction } from "./actions";
+import { SELF_OPTION } from "../shared";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,11 +14,24 @@ const MIN_RECURRENCE_MONTHS = 1;
 export default async function NewTaskPage() {
     const accountId = await requireAccountId();
 
-    const assets = await prisma.asset.findMany({
-        where: { accountId },
-        select: { id: true, name: true },
-        orderBy: { name: "asc" },
-    });
+    const [assets, fallbackSupplierId, suppliers] = await Promise.all([
+        prisma.asset.findMany({
+            where: { accountId },
+            select: { id: true, name: true },
+            orderBy: { name: "asc" },
+        }),
+        ensureUnknownSupplier(prisma, accountId),
+        prisma.supplier.findMany({
+            where: { accountId },
+            select: { id: true, name: true },
+            orderBy: { name: "asc" },
+        }),
+    ]);
+
+    const supplierOptions = [
+        { id: fallbackSupplierId, name: "Unknown Supplier" },
+        ...suppliers.filter((supplier) => supplier.id !== fallbackSupplierId),
+    ];
 
     return (
         <main className="container py-8">
@@ -45,6 +60,21 @@ export default async function NewTaskPage() {
                                     <option key={a.id} value={a.id}>{a.name}</option>
                                 ))}
                             </select>
+                        </div>
+
+                        <div className="field">
+                            <label htmlFor="preferredSupplierId" className="label">Preferred supplier</label>
+                            <select id="preferredSupplierId" name="preferredSupplierId" defaultValue={fallbackSupplierId}>
+                                {supplierOptions.map((supplier) => (
+                                    <option key={supplier.id} value={supplier.id}>
+                                        {supplier.name}
+                                    </option>
+                                ))}
+                                <option value={SELF_OPTION}>{"I'll handle this myself"}</option>
+                            </select>
+                            <small className="text-xs text-muted-foreground">
+                                Need someone else? <Link href="/suppliers">Add a supplier</Link> and reload this page.
+                            </small>
                         </div>
 
                         <div className="field">

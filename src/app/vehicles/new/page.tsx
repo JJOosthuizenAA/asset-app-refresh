@@ -1,8 +1,9 @@
-﻿// src/app/vehicles/new/page.tsx
+// src/app/vehicles/new/page.tsx
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
+import { ensureUnknownSupplier } from "@/lib/suppliers";
 import { requireAccountId } from "@/lib/current-account";
 import { AssetType, ParentType } from "@prisma/client";
 
@@ -42,6 +43,7 @@ async function createVehicleAction(formData: FormData) {
     const assetName = deriveVehicleAssetName({ nickname, make, model, year });
 
     const { vehicleId } = await prisma.$transaction(async (tx) => {
+        const unknownSupplierId = await ensureUnknownSupplier(tx, accountId);
         const createdVehicle = await tx.vehicle.create({
             data: {
                 accountId,
@@ -66,7 +68,7 @@ async function createVehicleAction(formData: FormData) {
                 assetType: AssetType.Car,
                 serial: vin ?? undefined,
                 parentType: ParentType.Vehicle,
-                parentId: createdVehicle.id,
+                parentId: createdVehicle.id,                primarySupplierId: unknownSupplierId,
             },
             select: { id: true },
         });
@@ -156,3 +158,8 @@ export default function NewVehiclePage() {
         </main>
     );
 }
+
+
+
+
+

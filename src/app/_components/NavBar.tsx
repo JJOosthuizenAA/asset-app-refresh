@@ -37,6 +37,7 @@ export default async function NavBar() {
                     <Link href="/assets" className="link">Assets</Link>
                     <Link href="/tasks" className="link">Tasks</Link>
                     <Link href="/warranties" className="link">Warranties</Link>
+                    <Link href="/suppliers" className="link">Suppliers</Link>
                 </nav>
 
                 {/* Right: ONLY the GearMenu client component */}

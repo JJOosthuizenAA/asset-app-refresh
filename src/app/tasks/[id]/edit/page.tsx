@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { ensureUnknownSupplier } from "@/lib/suppliers";
 import { requireAccountId } from "@/lib/current-account";
 import DeleteTaskButton from "./DeleteTaskButton";
 import { updateTask, deleteTask } from "./actions";
+import { SELF_OPTION } from "../../shared";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,17 +28,36 @@ export default async function EditTaskPage({ params }: { params: { id: string } 
             recurrenceMonths: true,
             nextDueDate: true,
             assetId: true,
+            preferredSupplierId: true,
+            selfServiceSelected: true,
             asset: { select: { id: true, name: true, accountId: true } },
         },
     });
 
     if (!task || (task.asset && task.asset.accountId !== accountId)) notFound();
 
-    const assets = await prisma.asset.findMany({
-        where: { accountId },
-        select: { id: true, name: true },
-        orderBy: { name: "asc" },
-    });
+    const [assets, fallbackSupplierId, suppliers] = await Promise.all([
+        prisma.asset.findMany({
+            where: { accountId },
+            select: { id: true, name: true },
+            orderBy: { name: "asc" },
+        }),
+        ensureUnknownSupplier(prisma, accountId),
+        prisma.supplier.findMany({
+            where: { accountId },
+            select: { id: true, name: true },
+            orderBy: { name: "asc" },
+        }),
+    ]);
+
+    const supplierOptions = [
+        { id: fallbackSupplierId, name: "Unknown Supplier" },
+        ...suppliers.filter((supplier) => supplier.id !== fallbackSupplierId),
+    ];
+
+    const supplierDefault = task.selfServiceSelected
+        ? SELF_OPTION
+        : task.preferredSupplierId ?? fallbackSupplierId;
 
     const updateAction = updateTask.bind(null, task.id);
     const deleteAction = deleteTask.bind(null, task.id);
@@ -77,6 +98,21 @@ export default async function EditTaskPage({ params }: { params: { id: string } 
                                     </option>
                                 ))}
                             </select>
+                        </div>
+
+                        <div className="field">
+                            <label htmlFor="preferredSupplierId" className="label">Preferred supplier</label>
+                            <select id="preferredSupplierId" name="preferredSupplierId" defaultValue={supplierDefault}>
+                                {supplierOptions.map((supplier) => (
+                                    <option key={supplier.id} value={supplier.id}>
+                                        {supplier.name}
+                                    </option>
+                                ))}
+                                <option value={SELF_OPTION}>{"I'll handle this myself"}</option>
+                            </select>
+                            <small className="text-xs text-muted-foreground">
+                                Need another vendor? <Link href="/suppliers">Add a supplier</Link> and reload this page.
+                            </small>
                         </div>
 
                         <div className="field">

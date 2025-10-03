@@ -2,11 +2,13 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { ensureUnknownSupplier } from "@/lib/suppliers";
 import { requireAccountId } from "@/lib/current-account";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { addMonths } from "date-fns";
 import { handleRecurringTransition, type RecurringTaskSnapshot, adjustToNextBusinessDay } from "@/lib/recurring-tasks";
+import { SELF_OPTION } from "../../shared";
 
 const MIN_RECURRENCE_MONTHS = 1;
 
@@ -40,6 +42,8 @@ export async function updateTask(id: string, formData: FormData) {
             templateId: true,
             cancelledAt: true,
             cancelReason: true,
+            preferredSupplierId: true,
+            selfServiceSelected: true,
             asset: { select: { id: true, accountId: true } },
         },
     });
@@ -63,6 +67,27 @@ export async function updateTask(id: string, formData: FormData) {
             select: { id: true },
         });
         if (!valid) throw new Error("Invalid asset");
+    }
+
+    const supplierSelection = asString(formData.get("preferredSupplierId"));
+    const fallbackSupplierId = await ensureUnknownSupplier(prisma, accountId);
+    let preferredSupplierId: string | null = owned.preferredSupplierId ?? fallbackSupplierId;
+    let selfServiceSelected = owned.selfServiceSelected ?? false;
+
+    if (supplierSelection === SELF_OPTION) {
+        selfServiceSelected = true;
+        preferredSupplierId = null;
+    } else if (supplierSelection) {
+        const supplier = await prisma.supplier.findFirst({
+            where: { id: supplierSelection, accountId },
+            select: { id: true },
+        });
+        if (!supplier) throw new Error("Selected supplier not found for this account.");
+        preferredSupplierId = supplier.id;
+        selfServiceSelected = false;
+    } else if (!owned.preferredSupplierId && !owned.selfServiceSelected) {
+        preferredSupplierId = fallbackSupplierId;
+        selfServiceSelected = false;
     }
 
     const isRecurring = String(formData.get("isRecurring") ?? "") === "on";
@@ -117,6 +142,8 @@ export async function updateTask(id: string, formData: FormData) {
                 dueDate: effectiveDueDate,
                 completed,
                 assetId,
+                preferredSupplierId,
+                selfServiceSelected,
                 isRecurring,
                 recurrenceMonths,
                 nextDueDate,

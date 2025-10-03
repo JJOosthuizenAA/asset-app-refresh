@@ -3,12 +3,21 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
+import { ensureUnknownSupplier } from "@/lib/suppliers";
+import SupplierPickerField from "@/app/_components/SupplierPickerField";
+import { SupplierCapabilityType } from "@prisma/client";
 import { requireAccountId } from "@/lib/current-account";
 import { allowedAssetTypesFor, isAssetTypeAllowed } from "@/lib/asset-types";
 import { loadParentSummary, ParentTypeLabels } from "@/lib/parents";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+function asString(value: FormDataEntryValue | null): string | null {
+    if (value == null) return null;
+    const trimmed = String(value).trim();
+    return trimmed.length ? trimmed : null;
+}
 
 function formatDate(value: Date | null | undefined) {
     if (!value) return "--";
@@ -21,6 +30,7 @@ async function updateAssetAction(formData: FormData) {
     const accountId = await requireAccountId();
     const id = String(formData.get("id") ?? "");
     const name = String(formData.get("name") ?? "").trim();
+    if (!name) throw new Error("Asset name is required");
     const description = (formData.get("description") as string | null)?.trim() || null;
     const assetType = (formData.get("assetType") as string | null) || null;
     const serial = (formData.get("serial") as string | null)?.trim() || null;
@@ -32,6 +42,20 @@ async function updateAssetAction(formData: FormData) {
 
     const purchaseDateStr = (formData.get("purchaseDate") as string | null) || "";
     const purchaseDate = purchaseDateStr ? new Date(purchaseDateStr) : null;
+
+    const supplierRaw = asString(formData.get("primarySupplierId"));
+    const fallbackSupplierId = await ensureUnknownSupplier(prisma, accountId);
+    let primarySupplierId = fallbackSupplierId;
+    if (supplierRaw) {
+        const supplier = await prisma.supplier.findFirst({
+            where: { id: supplierRaw, accountId },
+            select: { id: true },
+        });
+        if (!supplier) {
+            throw new Error("Selected supplier not found in this account");
+        }
+        primarySupplierId = supplier.id;
+    }
 
     const ctx = await prisma.asset.findFirst({
         where: { id, accountId },
@@ -58,6 +82,7 @@ async function updateAssetAction(formData: FormData) {
             location,
             purchaseDate,
             purchasePriceCents,
+            primarySupplierId,
         },
     });
 
@@ -82,13 +107,12 @@ export default async function EditAssetPage({ params }: { params: { id: string }
             purchasePriceCents: true,
             parentType: true,
             parentId: true,
+            primarySupplierId: true,
             account: { select: { currencyCode: true } },
         },
     });
 
     if (!asset) return notFound();
-
-    const parent = await loadParentSummary(prisma, accountId, { type: asset.parentType, id: asset.parentId });
 
     const account = asset.account;
     const currency = account?.currencyCode ?? "ZAR";
@@ -99,7 +123,27 @@ export default async function EditAssetPage({ params }: { params: { id: string }
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const [activeWarranties, openMaintenance] = await Promise.all([
+    const [parent, fallbackSupplierId, supplierOptions, activeWarranties, openMaintenance] = await Promise.all([
+        loadParentSummary(prisma, accountId, { type: asset.parentType, id: asset.parentId }),
+        ensureUnknownSupplier(prisma, accountId),
+        prisma.supplier.findMany({
+            where: { accountId },
+            select: {
+                id: true,
+                name: true,
+                description: true,
+                isMaintenance: true,
+                isSales: true,
+                city: true,
+                region: true,
+                postalCode: true,
+                countryCode: true,
+                capabilities: {
+                    select: { capability: true },
+                },
+            },
+            orderBy: { name: "asc" },
+        }),
         prisma.warranty.findMany({
             where: {
                 assetId: asset.id,
@@ -133,6 +177,39 @@ export default async function EditAssetPage({ params }: { params: { id: string }
         }),
     ]);
 
+
+const supplierList = [
+    {
+        id: fallbackSupplierId,
+        name: "Unknown Supplier",
+        description: null,
+        isMaintenance: false,
+        isSales: false,
+        city: null,
+        region: null,
+        postalCode: null,
+        countryCode: null,
+        capabilities: [],
+    },
+    ...supplierOptions
+        .filter((supplier) => supplier.id !== fallbackSupplierId)
+        .map((supplier) => ({
+            id: supplier.id,
+            name: supplier.name,
+            description: supplier.description ?? null,
+            isMaintenance: supplier.isMaintenance,
+            isSales: supplier.isSales,
+            city: supplier.city ?? null,
+            region: supplier.region ?? null,
+            postalCode: supplier.postalCode ?? null,
+            countryCode: supplier.countryCode ?? null,
+            capabilities: supplier.capabilities.map((cap) => cap.capability),
+        })),
+];
+const supplierDefault = asset.primarySupplierId ?? fallbackSupplierId;
+
+const capabilityOptions = Object.values(SupplierCapabilityType);
+
     return (
         <main className="container py-8">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -153,7 +230,7 @@ export default async function EditAssetPage({ params }: { params: { id: string }
                                 {activeWarranties.map((warranty) => (
                                     <li key={warranty.id}>
                                         <Link href={`/warranties/${warranty.id}`}>{warranty.name}</Link>
-                                        <span className="text-muted-foreground"> (expires {formatDate(warranty.expiresAt)})</span>
+                                        <span className="text-muted-foreground">{` (expires ${formatDate(warranty.expiresAt)})`}</span>
                                     </li>
                                 ))}
                             </ul>
@@ -197,6 +274,18 @@ export default async function EditAssetPage({ params }: { params: { id: string }
                         <input id="name" name="name" type="text" required defaultValue={asset.name} />
                     </div>
 
+                    <SupplierPickerField
+                        name="primarySupplierId"
+                        label="Primary supplier"
+                        description="Choose who owns this asset. Can't find them? Add a supplier and reload."
+                        suppliers={supplierList}
+                        value={supplierDefault}
+                        fallbackSupplierId={fallbackSupplierId}
+                        allowSelf={false}
+                        selfCapabilities={[]}
+                        capabilityOptions={capabilityOptions}
+                    />
+
                     <div className="field">
                         <label htmlFor="assetType" className="label">Asset type <span className="req">*</span></label>
                         <select id="assetType" name="assetType" required defaultValue={currentType}>
@@ -211,7 +300,6 @@ export default async function EditAssetPage({ params }: { params: { id: string }
                             Allowed for {ParentTypeLabels[asset.parentType]} containers.
                         </small>
                     </div>
-
                     <div className="grid grid-2">
                         <div className="field">
                             <label htmlFor="serial" className="label">Serial / VIN</label>
@@ -267,3 +355,5 @@ export default async function EditAssetPage({ params }: { params: { id: string }
         </main>
     );
 }
+
+

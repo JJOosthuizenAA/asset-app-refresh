@@ -1,8 +1,9 @@
-﻿// src/app/vehicles/[id]/edit/page.tsx
+// src/app/vehicles/[id]/edit/page.tsx
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
+import { ensureUnknownSupplier } from "@/lib/suppliers";
 import { requireAccountId } from "@/lib/current-account";
 import { AssetType, ParentType } from "@prisma/client";
 import { dateOrDash } from "@/lib/format";
@@ -83,14 +84,27 @@ async function updateVehicleAction(formData: FormData) {
         });
 
         if (existing.primaryAssetId) {
+            const currentAsset = await tx.asset.findUnique({
+                where: { id: existing.primaryAssetId },
+                select: { primarySupplierId: true },
+            });
+
+            const updateData: { name: string; serial: string | undefined; primarySupplierId?: string } = {
+                name: assetName,
+                serial: vin ?? undefined,
+            };
+
+            if (!currentAsset?.primarySupplierId) {
+                updateData.primarySupplierId = await ensureUnknownSupplier(tx, accountId);
+            }
+
             await tx.asset.update({
                 where: { id: existing.primaryAssetId },
-                data: {
-                    name: assetName,
-                    serial: vin ?? undefined,
-                },
+                data: updateData,
             });
         } else {
+            const unknownSupplierId = await ensureUnknownSupplier(tx, accountId);
+
             const asset = await tx.asset.create({
                 data: {
                     accountId: existing.accountId,
@@ -99,6 +113,7 @@ async function updateVehicleAction(formData: FormData) {
                     serial: vin ?? undefined,
                     parentType: ParentType.Vehicle,
                     parentId: id,
+                    primarySupplierId: unknownSupplierId,
                 },
                 select: { id: true },
             });
@@ -151,7 +166,7 @@ export default async function EditVehiclePage({ params }: { params: { id: string
                 <div>
                     <h1>{headerTitle}</h1>
                     <p className="text-muted-foreground" style={{ marginTop: 4 }}>
-                        Created {dateOrDash(vehicle.createdAt)} · Updated {dateOrDash(vehicle.updatedAt)}
+                        Created {dateOrDash(vehicle.createdAt)} � Updated {dateOrDash(vehicle.updatedAt)}
                     </p>
                 </div>
                 <Link href={`/vehicles/${vehicle.id}`} className="btn btn-outline">
@@ -227,3 +242,7 @@ export default async function EditVehiclePage({ params }: { params: { id: string
         </main>
     );
 }
+
+
+
+

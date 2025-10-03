@@ -41,6 +41,7 @@ export default async function AssetDetailPage({ params }: { params: { id: string
             purchasePriceCents: true,
             parentType: true,
             parentId: true,
+            primarySupplier: { select: { id: true, name: true, contactEmail: true, contactPhone: true } },
             account: { select: { currencyCode: true } },
         },
     });
@@ -162,6 +163,12 @@ export default async function AssetDetailPage({ params }: { params: { id: string
                         <div>
                             <small className="text-muted-foreground">Category</small>
                             <div>{asset.category ?? asset.assetType ?? "-"}</div>
+                        </div>
+
+                        <div>
+                            <small className="text-muted-foreground">Primary supplier</small>
+                            <div>{asset.primarySupplier ? asset.primarySupplier.name : "Unknown Supplier"}</div>
+                            <small className="text-xs text-muted-foreground">Manage suppliers under <Link href="/suppliers">Suppliers</Link>.</small>
                         </div>
 
                         <div>
